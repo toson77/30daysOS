@@ -7,8 +7,11 @@ ipl10.bin : ipl10.asm Makefile
 asmhead.bin : asmhead.asm Makefile
 	nasm asmhead.asm -o asmhead.bin -l asmhead.lst
 
-bootpack.hrb : bootpack.c har.ld Makefile       # Cファイルをリンカスクリプトを用いてコンパイル
-	gcc -march=i486 -m32 -fno-pie -nostdlib -T har.ld bootpack.c -o bootpack.hrb
+nasmfunc.o : nasmfunc.asm Makefile
+	nasm -g -f elf nasmfunc.asm -o nasmfunc.o
+
+bootpack.hrb : bootpack.c har.ld Makefile nasmfunc.o      # Cファイルをリンカスクリプトを用いてコンパイル
+	gcc -march=i486 -m32 -fno-pie -nostdlib -T har.ld bootpack.c nasmfunc.o -o bootpack.hrb
 
 haribote.sys : asmhead.bin bootpack.hrb Makefile
 	cat asmhead.bin bootpack.hrb > haribote.sys
