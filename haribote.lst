@@ -1,9 +1,27 @@
-     1                                  		ORG		0xc200		; 0xc200 <- 0x8000 + 0x4200
-     2 00000000 B013                    		MOV		AL, 0x13	; VGA graphics
-     3 00000002 B400                    		MOV		AH, 0x00
-     4 00000004 CD10                    		INT		0x10
-     5                                  fin:
-     6 00000006 F4                      		HLT
-     7 00000007 EBFD                    		JMP		fin
-     8                                  
-     9                                  ; vim:ft=nasm
+     1                                  ; haribote-os
+     2                                  ; TAB=4
+     3                                  ; BOOT_INFO
+     4                                  CYLS	EQU		0x0ff0		; set boot sector
+     5                                  LEDS	EQU		0x0ff1
+     6                                  VMODE	EQU		0x0ff2		; bit color info
+     7                                  SCRNX	EQU		0x0ff4		; screen x size
+     8                                  SCRNY	EQU		0x0ff6		; screen y size
+     9                                  VRAM	EQU		0x0ff8		; point of start gui buf
+    10                                  		ORG		0xc200		; 0xc200 <- 0x8000 + 0x4200
+    11 00000000 B013                    		MOV		AL, 0x13	; VGA graphics
+    12 00000002 B400                    		MOV		AH, 0x00
+    13 00000004 CD10                    		INT		0x10
+    14 00000006 C606F20F08              		MOV		BYTE [VMODE], 8		; set screenmode
+    15 0000000B C706F40F4001            		MOV		WORD [SCRNX], 320	; set screen x size
+    16 00000011 C706F60FC800            		MOV		WORD [SCRNY], 200	; set screen y size
+    17 00000017 66C706F80F00A00000      		MOV		DWORD [VRAM], 0x000a000
+    18                                  ; BIOS teach LED state on keyboard
+    19 00000020 B402                    		MOV		AH, 0x02
+    20 00000022 CD16                    		INT		0x16		; keyboard BIOS
+    21 00000024 A2F10F                  		MOV		[LEDS], AL
+    22                                  
+    23                                  fin:
+    24 00000027 F4                      		HLT
+    25 00000028 EBFD                    		JMP		fin
+    26                                  
+    27                                  ; vim:ft=nasm
