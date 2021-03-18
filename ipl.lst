@@ -7,7 +7,7 @@
      7                                  
      8 00000000 EB4E                    	JMP     entry
      9 00000002 90                      	DB      0x90
-    10 00000003 48454C4C4F49504C        	DB      "HELLOIPL"      ; ブートセレクタの名前を自由にかいていよい  (8Byte)
+    10 00000003 48415249424F5445        	DB      "HARIBOTE"      ; ブートセレクタの名前を自由にかいていよい  (8Byte)
     11 0000000B 0002                    	DW      512             ; 1セクタの大きさ                           (512にしなければならない)
     12 0000000D 01                      	DB      1               ; クラスタの大きさ                          (1セクタにしなければならない)
     13 0000000E 0100                    	DW      1               ; FATがどこから始まるか                     (普通は1セクタ目からにする)
@@ -22,8 +22,8 @@
     22 00000020 400B0000                	DD      2880            ; このドライブの大きさをもう一度書く
     23 00000024 000029                  	DB      0, 0, 0x29      ; よくわからないけどこの値にしておくといいらしい
     24 00000027 FFFFFFFF                	DD      0xffffffff      ; たぶんボリュームシリアル番号
-    25 0000002B 48454C4C4F2D4F5320-     	DB      "HELLO-OS   "   ; ディスクの名前                            (11Byte)
-    25 00000034 2020               
+    25 0000002B 48415249424F54454F-     	DB      "HARIBOTEOS "   ; ディスクの名前                            (11Byte)
+    25 00000034 5320               
     26 00000036 4641543132202020        	DB      "FAT12   "      ; フォーマットの名前                        (8Byte)
     27 0000003E <res 12h>               	RESB    18              ; とりあえず18バイト開けておく
     27          ******************       warning: uninitialized space declared in .text section: zeroing [-w+zeroing]
@@ -34,31 +34,69 @@
     32 00000053 8ED0                    		MOV		SS,	AX
     33 00000055 BC007C                  		MOV		SP,	0x7c00
     34 00000058 8ED8                    		MOV		DS,	AX
-    35 0000005A 8EC0                    		MOV		ES,	AX
-    36                                  
-    37 0000005C BE[7400]                		MOV		SI,	msg
-    38                                  putloop:
-    39 0000005F 8A04                    		MOV		AL, [SI]	; BYTE (accumulator low)
-    40 00000061 83C601                  		ADD		SI, 1		; increment
-    41 00000064 3C00                    		CMP		AL, 0		; compare (<end msg>)
-    42 00000066 7409                    		JE		fin			; jump to fin if equal to 0
-    43 00000068 B40E                    		MOV		AH, 0x0e	; AH = 0x0e
-    44 0000006A BB0F00                  		MOV		BX, 15		; BH = 0, BL = <color code>
-    45 0000006D CD10                    		INT		0x10		; interrupt BIOS
-    46 0000006F EBEE                    		JMP		putloop
+    35                                  
+    36                                  ; load disk
+    37 0000005A B82008                  		MOV		AX, 0x0820
+    38 0000005D 8EC0                    		MOV		ES, AX
+    39 0000005F B500                    		MOV		CH, 0
+    40 00000061 B600                    		MOV		DH, 0
+    41 00000063 B102                    		MOV		CL, 2
+    42                                  
+    43                                  readloop:
+    44 00000065 BE0000                  		MOV 	SI, 0		;fail count
+    45                                  
+    46                                  retry:
     47                                  
-    48                                  fin:
-    49 00000071 F4                      		HLT					; wait cpu
-    50 00000072 EBFD                    		JMP		fin			; infinite loop
-    51                                  
-    52                                  msg:
-    53 00000074 0A0A                    		DB		0x0a, 0x0a	; two new line
-    54 00000076 68656C6C6F2C20776F-     		DB		"hello, world"
-    54 0000007F 726C64             
-    55 00000082 0A                      		DB		0x0a		; new line
-    56 00000083 00                      		DB		0			;end msg
-    57                                  
-    58 00000084 <res 17Ah>              		RESB	0x7dfe-0x7c00-($-$$)
-    58          ******************       warning: uninitialized space declared in .text section: zeroing [-w+zeroing]
-    59 000001FE 55AA                    		DB		0x55, 0xaa
-    60                                  
+    48 00000068 B402                    		MOV		AH, 0x02	; read disk
+    49 0000006A B001                    		MOV		AL, 1		; sector 1
+    50 0000006C BB0000                  		MOV		BX, 0		; buffer address
+    51 0000006F B200                    		MOV		DL, 0x00	;drive number
+    52 00000071 CD13                    		INT		0x13		;BIOS Call
+    53 00000073 7310                    		JNC		next		; jump if not carry
+    54 00000075 83C601                  		ADD		SI, 1		; increment SI
+    55 00000078 83FE05                  		CMP		SI, 5
+    56 0000007B 7317                    		JAE		error		; SI >= 5 then jump to error
+    57 0000007D B400                    		MOV		AH, 0x00	; 0x00 - reset
+    58 0000007F B200                    		MOV		DL, 0x00	; A drive
+    59 00000081 CD13                    		INT		0x13		; reset drive
+    60 00000083 EBE3                    		JMP		retry
+    61                                  
+    62                                  next:
+    63                                  		; add 0x20 to ES
+    64 00000085 8CC0                    		MOV		AX, ES		; 0x20 forward
+    65 00000087 83C020                  		ADD		AX, 0x0020	; 512 / 16 = 0x20
+    66 0000008A 8EC0                    		MOV		ES, AX
+    67 0000008C 80C101                  		ADD		CL, 1
+    68 0000008F 80F912                  		CMP		CL, 18
+    69 00000092 76D1                    		JBE		readloop	; if(CL <= 18) goto readloop
+    70                                  
+    71                                  
+    72                                  error:
+    73 00000094 BE[AC00]                		MOV		SI, msg
+    74                                  
+    75                                  putloop:
+    76 00000097 8A04                    		MOV		AL, [SI]	; BYTE (accumulator low)
+    77 00000099 83C601                  		ADD		SI, 1		; increment
+    78 0000009C 3C00                    		CMP		AL, 0		; compare (<end msg>)
+    79 0000009E 7409                    		JE		fin			; jump to fin if equal to 0
+    80 000000A0 B40E                    		MOV		AH, 0x0e	; AH = 0x0e
+    81 000000A2 BB0F00                  		MOV		BX, 15		; BH = 0, BL = <color code>
+    82 000000A5 CD10                    		INT		0x10		; interrupt BIOS
+    83 000000A7 EBEE                    		JMP		putloop
+    84                                  
+    85                                  fin:
+    86 000000A9 F4                      		HLT					; wait cpu
+    87 000000AA EBFD                    		JMP		fin			; infinite loop
+    88                                  
+    89                                  msg:
+    90 000000AC 0A0A                    		DB		0x0a, 0x0a	; two new line
+    91 000000AE 6C6F6164206572726F-     		DB		"load error"
+    91 000000B7 72                 
+    92 000000B8 0A                      		DB		0x0a		; new line
+    93 000000B9 00                      		DB		0			;end msg
+    94                                  
+    95 000000BA <res 144h>              		RESB	0x7dfe-0x7c00-($-$$)
+    95          ******************       warning: uninitialized space declared in .text section: zeroing [-w+zeroing]
+    96 000001FE 55AA                    		DB		0x55, 0xaa
+    97                                  
+    98                                  ; vim:ft=nasm
