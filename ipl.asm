@@ -1,6 +1,7 @@
 ; haribote-ipl
 ; TAB=4
-        ORG     0x7c00          ; read start
+CYLS    EQU     10              ;read to 10 Cylinder
+        ORG     0x7c00          ; read start memory
 
 ; description for floppy disk
         JMP     entry           ; BS_JmpBoot
@@ -77,6 +78,16 @@ next:
         ADD     CL, 1
         CMP     CL, 18
         JBE     readloop
+        ; reverce disk
+        MOV     CL, 1           ; reset sector
+        ADD     DH, 1           ; reverse HEAD
+        CMP     DH, 2
+        JB      readloop        ; if(DH < 2) goto readloop
+        ; next cylinder
+        MOV     DH, 0           ;reset HEAD
+        ADD     CH, 1           ; cylinder += 1
+        CMP     CH, CYLS
+        JB      readloop
 
 fin:
         HLT
@@ -107,3 +118,6 @@ msg:
 ; END BS_BootCode
 
         DB      0x55, 0xaa      ; BS_BootSign, boot signature
+
+; vim:ft=nasm
+
