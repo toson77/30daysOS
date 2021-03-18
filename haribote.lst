@@ -1,0 +1,5 @@
+     1                                  fin:
+     2 00000000 F4                      		HLT
+     3 00000001 EBFD                    		JMP		fin
+     4                                  
+     5                                  ; vim:ft=nasm
