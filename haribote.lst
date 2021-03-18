@@ -1,5 +1,9 @@
-     1                                  fin:
-     2 00000000 F4                      		HLT
-     3 00000001 EBFD                    		JMP		fin
-     4                                  
-     5                                  ; vim:ft=nasm
+     1                                  		ORG		0xc200		; 0xc200 <- 0x8000 + 0x4200
+     2 00000000 B013                    		MOV		AL, 0x13	; VGA graphics
+     3 00000002 B400                    		MOV		AH, 0x00
+     4 00000004 CD10                    		INT		0x10
+     5                                  fin:
+     6 00000006 F4                      		HLT
+     7 00000007 EBFD                    		JMP		fin
+     8                                  
+     9                                  ; vim:ft=nasm

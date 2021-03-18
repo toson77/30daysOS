@@ -88,6 +88,9 @@ next:
         ADD     CH, 1           ; cylinder += 1
         CMP     CH, CYLS
         JB      readloop
+        ; go to OS body
+        MOV     [0x0ff0], CH    ;IPL read point save
+        JMP     0xc200
 
 fin:
         HLT
