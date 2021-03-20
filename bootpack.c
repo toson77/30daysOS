@@ -4,12 +4,11 @@ extern void io_hlt(void);
 void HariMain(void)
 {
 	char *p;
-	int i;
-	for( i = 0x000a0000; i <= 0x000affff; i++){
+	p = (char *) 0x000a0000;
+	for( int i = 0; i <= 0xffff; i++){
 	//	write_mem8(i, i & 0x0f);
 	//	write_mem8(i, 13);
-		p = (char *) i;
-		*p = i & 0x0f;
+		p[i] = i & 0x0f;
 	}
 
 	for(;;){
