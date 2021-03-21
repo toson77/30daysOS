@@ -8,7 +8,7 @@ extern void io_store_eflags(int eflags);
 
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
-void boxfile8(unsigned char *vram,
+void boxfill8(unsigned char *vram,
               int xsize,
               unsigned char c,
               int x0,
@@ -35,12 +35,29 @@ void boxfile8(unsigned char *vram,
 
 void HariMain(void)
 {
-  char *p;  // BYTE [...]用番地
-  p = (char *) 0xa0000;
+  unsigned char *vram;  // BYTE [...]用番地
+  int xsize, ysize;
+  vram = (char *) 0xa0000;
   init_palette();
-  boxfile8(p, 320, COL8_FF0000, 20, 20, 120, 120);
-  boxfile8(p, 320, COL8_00FF00, 70, 50, 170, 150);
-  boxfile8(p, 320, COL8_0000FF, 120, 80, 220, 180);
+  xsize = 320;
+  ysize = 200;
+  boxfill8(vram, xsize, COL8_008484,  0,         0,          xsize -  1, ysize - 29);
+  boxfill8(vram, xsize, COL8_C6C6C6,  0,         ysize - 28, xsize -  1, ysize - 28);
+  boxfill8(vram, xsize, COL8_FFFFFF,  0,         ysize - 27, xsize -  1, ysize - 27);
+  boxfill8(vram, xsize, COL8_C6C6C6,  0,         ysize - 26, xsize -  1, ysize -  1);
+
+  boxfill8(vram, xsize, COL8_FFFFFF,  3,         ysize - 24, 59,         ysize - 24);
+  boxfill8(vram, xsize, COL8_FFFFFF,  2,         ysize - 24,  2,         ysize -  4);
+  boxfill8(vram, xsize, COL8_848484,  3,         ysize -  4, 59,         ysize -  4);
+  boxfill8(vram, xsize, COL8_848484, 59,         ysize - 23, 59,         ysize -  5);
+  boxfill8(vram, xsize, COL8_000000,  2,         ysize -  3, 59,         ysize -  3);
+  boxfill8(vram, xsize, COL8_000000, 60,         ysize - 24, 60,         ysize -  3);
+
+    boxfill8(vram, xsize, COL8_848484, xsize - 47, ysize - 24, xsize -  4, ysize - 24);
+    boxfill8(vram, xsize, COL8_848484, xsize - 47, ysize - 23, xsize - 47, ysize -  4);
+    boxfill8(vram, xsize, COL8_FFFFFF, xsize - 47, ysize -  3, xsize -  4, ysize -  3);
+    boxfill8(vram, xsize, COL8_FFFFFF, xsize -  3, ysize - 24, xsize -  3, ysize -  3);
+
   for(;;){
     io_hlt();
   }
@@ -79,16 +96,16 @@ void set_palette(int start, int end, unsigned char *rgb)
   io_cli();                     // 許可フラグを0にして割り込みを禁止する
   io_out8(0x03c8, start);
   for (i = start; i <= end; i++){
-    io_out8(0x03c9, rgb[0] / 4);
-    io_out8(0x03c9, rgb[1] / 4);
-    io_out8(0x03c9, rgb[2] / 4);
+    io_out8(0x03c9, rgb[0] / 4);  //R
+    io_out8(0x03c9, rgb[1] / 4);  //G
+    io_out8(0x03c9, rgb[2] / 4);  //B
     rgb += 3;
   }
   io_store_eflags(eflags);    // 割り込み許可フラグを元にもどす
   return;
 }
 
-void boxfile8(unsigned char *vram,
+void boxfill8(unsigned char *vram,
               int xsize,
               unsigned char c,
               int x0,
