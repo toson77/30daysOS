@@ -17,6 +17,8 @@ void boxfill8(unsigned char *vram,
               int y1);
 void init_screen(char *vram, int x, int y);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
+
 
 #define COL8_000000     0
 #define COL8_FF0000     1
@@ -43,16 +45,14 @@ struct BOOTINFO{
 
 void HariMain(void)
 {
-  struct BOOTINFO *binfo;
-  static char font_A[16] = {
-    0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-    0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-  };
+  struct BOOTINFO *binfo = (struct BOOTINFO *) 0x0ff0;
   init_palette();
-  binfo = (struct BOOTINFO *) 0x0ff0;
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-  putfont8(binfo->vram, binfo->scrnx, 10, 10, COL8_FFFFFF, font_A);
- for(;;){
+  putfonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "ABC 123");
+  putfonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "Haribote OS.");
+  putfonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "Haribote OS.");
+
+   for(;;){
     io_hlt();
   }
 }
@@ -150,6 +150,16 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
      if ((d & 0x04) != 0) { p[5] = c;}
      if ((d & 0x02) != 0) { p[6] = c;}
      if ((d & 0x01) != 0) { p[7] = c;}
+  }
+  return;
+}
+
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+{
+  extern char hankaku[4096];
+  for(; *s != 0x00; s++){
+    putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+    x += 8;
   }
   return;
 }

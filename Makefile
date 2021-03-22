@@ -10,8 +10,8 @@ asmhead.bin : asmhead.asm Makefile
 nasmfunc.o : nasmfunc.asm Makefile
 	nasm -g -f elf nasmfunc.asm -o nasmfunc.o
 
-bootpack.hrb : bootpack.c har.ld Makefile nasmfunc.o      # Cファイルをリンカスクリプトを用いてコンパイル
-	gcc -march=i486 -m32 -fno-pie -nostdlib -T har.ld bootpack.c nasmfunc.o -o bootpack.hrb
+bootpack.hrb : bootpack.c har.ld Makefile nasmfunc.o hankaku.c     # Cファイルをリンカスクリプトを用いてコンパイル
+	gcc -march=i486 -m32 -fno-pie -nostdlib -T har.ld bootpack.c nasmfunc.o hankaku.c -o bootpack.hrb
 
 haribote.sys : asmhead.bin bootpack.hrb Makefile
 	cat asmhead.bin bootpack.hrb > haribote.sys
@@ -36,3 +36,15 @@ debug :
 
 clean :
 	rm *.lst *.bin *.sys *.img *.hrb
+	rm hankaku.c
+	rm convHankakuTxt
+
+src_only :
+	make clean
+	rm haribote.img
+
+convHankakuTxt : convHankakuTxt.c
+	$(CC) $< -o $@
+
+hankaku.c : hankaku.txt convHankakuTxt
+	./convHankakuTxt
