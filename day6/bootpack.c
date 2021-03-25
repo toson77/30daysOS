@@ -8,6 +8,7 @@ void HariMain(void)
 
   init_gdtidt();
   init_pic();
+  io_sti();
   init_palette();
   init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
   mx=(binfo->scrnx -16) / 2;

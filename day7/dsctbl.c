@@ -3,12 +3,12 @@
 
 void init_gdtidt(void)
 {
-	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) 0x00270000;
-	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) 0x0026f800;
+	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
+	struct GATE_DESCRIPTOR    *idt = (struct GATE_DESCRIPTOR    *) ADR_IDT;
 	int i;
 
 	/* GDTの初期化 */
-	for (i = 0; i < 8192; i++) {
+	for (i = 0; i < LIMIT_GDT / 8; i++) {
 		set_segmdesc(gdt + i, 0, 0, 0);
 	}
 	set_segmdesc(gdt + 1, 0xffffffff, 0x00000000, AR_DATA32_RW);
@@ -16,7 +16,7 @@ void init_gdtidt(void)
 	load_gdtr(LIMIT_GDT, ADR_GDT);
 
 	/* IDTの初期化 */
-	for (i = 0; i < LIMIT_IDT; i++) {
+	for (i = 0; i < LIMIT_IDT / 8; i++) {
 		set_gatedesc(idt + i, 0, 0, 0);
 	}
 	load_idtr(LIMIT_IDT, ADR_IDT);
