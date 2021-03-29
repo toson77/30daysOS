@@ -9,6 +9,7 @@ struct BOOTINFO{ /*0x0ff0-0x0fff */
 };
 #define ADR_BOOTINFO 	0x00000ff0
 
+
 /* naskfunc.nas */
 void io_hlt(void);
 void io_cli(void);
@@ -24,6 +25,14 @@ void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
 
+struct FIFO8 {
+	unsigned char *buf;
+	int p, q, size, free, flags;
+};
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+int fifo8_get(struct FIFO8 *fifo);
+int fifo8_status(struct FIFO8 *fifo);
 
 /* graphic.c */
 void init_palette(void);
