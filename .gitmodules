@@ -1,0 +1,7 @@
+[submodule "harib27f"]
+	path = harib27f
+	url = https://github.com/HariboteOS/harib27f
+
+[submodule "z_tools"]
+	path = z_tools
+	url = https://github.com/HariboteOS/z_tools_linux
