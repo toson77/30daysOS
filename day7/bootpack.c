@@ -14,6 +14,7 @@ void HariMain(void)
   init_gdtidt();
   init_pic();
   io_sti();
+  
   fifo8_init(&keyfifo, 32, keybuf);
   fifo8_init(&mousefifo, 128, mousebuf);
   io_out8(PIC0_IMR, 0xf9); /*PIC1 and keyboard allow */
