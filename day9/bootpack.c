@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include "bootpack.h"
 unsigned int memtest(unsigned int start, unsigned int end);
-unsigned int memtest_sub(unsigned int start, unsigned int end);
-
 
 void HariMain(void)
 {
@@ -32,7 +30,7 @@ void HariMain(void)
   sprintf(s, "(%d, %d)", mx, my);
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 
-  i = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
+  i = memtest(0x00400000, 0xbfffffff) / (1024*1024) ;
   sprintf(s, "memory %dMB", i);
   putfonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
@@ -125,26 +123,3 @@ unsigned int memtest(unsigned int start, unsigned int end)
   }
   return i;
 }
-
-unsigned int memtest_sub(unsigned int start, unsigned int end)
-{
-  unsigned int i, *p, old, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
-  for (i = start; i <= end; i += 0x1000){
-    p = (unsigned int *) (i + 0xffc);
-    old = *p; /* memory *p */
-    *p = pat0;
-    *p ^= 0xffffffff; /* reverse */
-    if(*p != pat1){
-  not_memory:
-      *p = old;
-      break;
-    }
-    *p ^= 0xffffffff; /* reverse again */
-    if(*p != pat0){
-      goto not_memory;
-    }
-    *p = old;
-  }
-  return i;
-}
-
