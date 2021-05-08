@@ -59,7 +59,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat){
       mdec->x |= 0xffffff00;
     }
     if ((mdec->buf[0] & 0x20) != 0){
-      mdec->y |= -0xffffff00;
+      mdec->y |= 0xffffff00;
     }
     /* On the mouse, the sign in the y direction is opposite to the screen */
     mdec->y =  -mdec->y;
