@@ -23,7 +23,8 @@ void HariMain(void)
 
     fifo8_init(&keyfifo, 32, keybuf);
     fifo8_init(&mousefifo, 128, mousebuf);
-    io_out8(PIC0_IMR, 0xf9); /*PIC1 and keyboard allow */
+    init_pit();
+    io_out8(PIC0_IMR, 0xf8); /*PIC1 and keyboard and PIT allow */
     io_out8(PIC1_IMR, 0xef); /* mouse allow */
 
     init_keyboard();
@@ -70,7 +71,7 @@ void HariMain(void)
 
         io_cli();   /* disable interrupt*/
         if(fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
-            io_stihlt();
+            io_sti();
         }
         else {
             if(fifo8_status(&keyfifo) != 0) {
