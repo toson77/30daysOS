@@ -51,7 +51,7 @@ void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
-    timer->timeout = timeout;
+    timer->timeout = timeout + timerctl.count;
     timer->flags = TIMER_FLAGS_USING;
     return;
 }
@@ -59,19 +59,17 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
 void inthandler20(int *esp)
 {
     int i;
-    io_out8(PIC0_OCW2, 0x60); /* IRQ-00受付完了をPICに通知 */
+    io_out8(PIC0_OCW2, 0x60); /* recieve IRQ-00 send to PIC */
     timerctl.count++;
     for (i = 0; i < MAX_TIMER; i++)
     {
         if (timerctl.timer[i].flags == TIMER_FLAGS_USING)
         {
-            timerctl.timer[i].timeout--;
-            if (timerctl.timer[i].timeout == 0)
-            {
+            if(timerctl.timer[i].timeout <= timerctl.count) {
                 timerctl.timer[i].flags = TIMER_FLAGS_ALLOC;
                 fifo8_put(timerctl.timer[i].fifo, timerctl.timer[i].data);
             }
         }
     }
-    return;
+        return;
 }
