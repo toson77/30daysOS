@@ -58,12 +58,21 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
     timer->flags = TIMER_FLAGS_USING;
     e = io_load_eflags();
     io_cli();
+    /* serch where input */
     for ( i = 0; i < timerctl.using; i++) {
         if ( timerctl.timers[i]->timeout >= timer->timeout){
             break;
         }
     }
-    /* totyudd*/
+    /* move back */
+    for (j = timerctl.using; j > i; j--){
+        timerctl.timers[j] = timerctl.timers[j-1];
+    }
+    timerctl.using++;
+    timerctl.timers[i] = timer;
+    timerctl.next = timerctl.timers[0]->timeout;
+    io_store_eflags(e);
+    return;
 }
 
 void inthandler20(int *esp)
