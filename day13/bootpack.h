@@ -170,13 +170,14 @@ void timer_free(struct TIMER *timer);
 void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
 void timer_settime(struct TIMER *fimer, unsigned int timeout);
 struct TIMER {
+	struct TIMER *next_timer;
 	unsigned int timeout, flags;
 	struct FIFO32 *fifo;
 	int data;
 };
 struct TIMERCTL {
-	unsigned int count, next, using;
-	struct TIMER *timers[MAX_TIMER];
+	unsigned int count, next_time, using;
+	struct TIMER *t0;
 	struct TIMER timers0[MAX_TIMER];
 };
 extern struct TIMERCTL timerctl;

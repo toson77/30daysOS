@@ -15,7 +15,7 @@ void init_pit(void)
     io_out8(PIT_CNT0, 0x9c);
     io_out8(PIT_CNT0, 0x2e);
     timerctl.count = 0;
-    timerctl.next = 0xffffffff;
+    timerctl.next_time = 0xffffffff;
     timerctl.using = 0;
     for (i = 0; i < MAX_TIMER; i++)
     {
@@ -53,53 +53,83 @@ void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
-    int e, i, j;
+    int e;
+    struct TIMER *t, *s;
     timer->timeout = timeout + timerctl.count;
     timer->flags = TIMER_FLAGS_USING;
     e = io_load_eflags();
     io_cli();
-    /* serch where input */
-    for ( i = 0; i < timerctl.using; i++) {
-        if ( timerctl.timers[i]->timeout >= timer->timeout){
+    timerctl.using++;
+    if (timerctl.using == 1) {
+        /* if only one timer in active */
+        timerctl.t0 = timer;
+        timer->next_timer = 0;
+        timerctl.next_time = timer->timeout;
+        io_store_eflags(e);
+        return;
+    }
+    t = timerctl.t0;
+    if (timer->timeout <= t->timeout) {
+        /* when putting in the beginning */
+        timerctl.t0 = timer;
+        timer->next_timer = t;
+        timerctl.next_time = timer->timeout;
+        io_store_eflags(e);
+        return;
+    }
+    /* find where to put in */
+    for(;;) {
+        s = t;
+        t = t->next_timer;
+        if (t == 0) {
             break;
+            }
+        if ( timer->timeout <= t->timeout ) {
+            /* if where to put between s and t */
+            s->next_timer = timer;
+            timer->next_timer = t;
+            io_store_eflags(e);
+            return;
         }
     }
-    /* move back */
-    for (j = timerctl.using; j > i; j--){
-        timerctl.timers[j] = timerctl.timers[j-1];
-    }
-    timerctl.using++;
-    timerctl.timers[i] = timer;
-    timerctl.next = timerctl.timers[0]->timeout;
+    /* when putting in the back */
+    s->next_timer = timer;
+    timer->next_timer = 0;
     io_store_eflags(e);
     return;
 }
 
+
+
+
 void inthandler20(int *esp)
 {
-    int i, j;
+    int i;
+    struct TIMER *timer;
     io_out8(PIC0_OCW2, 0x60); /* recieve IRQ-00 send to PIC */
     timerctl.count++;
-    if( timerctl.next > timerctl.count) {
+    if( timerctl.next_time > timerctl.count) {
         return;
     }
+    timer = timerctl.t0;
     for (i = 0; i < timerctl.using; i++)
     {
-        if (timerctl.timers[i]->timeout > timerctl.count) {
+        if (timer->timeout > timerctl.count) {
             break;
         }
         /* time out */
-        timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC;
-        fifo32_put(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+        timer->flags = TIMER_FLAGS_ALLOC;
+        fifo32_put(timer->fifo, timer->data);
+        timer = timer->next_timer;
     }
     timerctl.using -= i;
-    for ( j = 0; j < timerctl.using; j++) {
-        timerctl.timers[j] = timerctl.timers[i + j];
-    }
+    /* new slide */
+    timerctl.t0 = timer;
+    /* timerctl.next setting */
     if (timerctl.using > 0){
-        timerctl.next = timerctl.timers[0]->timeout;
+        timerctl.next_time = timerctl.t0->timeout;
     } else {
-        timerctl.next = 0xffffffff;
+        timerctl.next_time = 0xffffffff;
     }
     return;
 }
