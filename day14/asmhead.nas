@@ -3,7 +3,12 @@
 
 [INSTRSET "i486p"]
 
-VBEMODE EQU 	0x105 			; 1024 * 768 * 8bit color
+; 0x100 : 640 * 400
+; 0x101 : 640 * 480
+; 0x103 : 800 * 600
+; 0x105 : 1024 * 768
+; 0x107 : 1280 * 1024
+VBEMODE EQU 	0x100 			; 1024 * 768 * 8bit color
 BOTPAK	EQU		0x00280000		; bootpackのロード先
 DSKCAC	EQU		0x00100000		; ディスクキャッシュの場所
 DSKCAC0	EQU		0x00008000		; ディスクキャッシュの場所（リアルモード）
