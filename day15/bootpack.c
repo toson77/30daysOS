@@ -6,7 +6,7 @@ void putfonts8_asc_sht(struct SHEET *sht, int x, int y, int c, int b, char *s, i
 void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c);
 void task_b_main(struct SHEET *sht_back);
 
- struct TSS32 {
+struct TSS32 {
     int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
     int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
     int es, cs, ss, ds, fs, gs;
@@ -19,7 +19,7 @@ void HariMain(void)
     struct FIFO32 fifo ;
     char  s[40];
     int fifobuf[128];
-    struct TIMER *timer, *timer2, *timer3, *timer_ts;
+    struct TIMER *timer, *timer2, *timer3;
     int mx, my, i, cursor_x, cursor_c, task_b_esp;
     unsigned int memtotal;
     struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
@@ -58,9 +58,6 @@ void HariMain(void)
     timer3 = timer_alloc();
     timer_init(timer3, &fifo, 1);
     timer_settime(timer3, 50);
-    timer_ts = timer_alloc();
-    timer_init(timer_ts, &fifo, 2);
-    timer_settime(timer_ts, 2);
 
     memtotal = memtest(0x00400000, 0xbfffffff);
     memman_init(memman);
@@ -121,6 +118,7 @@ void HariMain(void)
     tss_b.fs = 1 * 8;
     tss_b.gs = 1 * 8;
     *((int *) (task_b_esp + 4)) = (int) sht_back;
+    mt_init();
 
     for (;;) {
         io_cli();
@@ -130,10 +128,7 @@ void HariMain(void)
         else {
             i = fifo32_get(&fifo);
             io_sti();
-            if (i == 2) {
-                farjmp(0, 4 * 8);
-                timer_settime(timer_ts, 2);
-            } else if (256 <= i && i <= 511) {
+             if (256 <= i && i <= 511) {
                 sprintf(s, "%02X", i - 256);
                 putfonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
                 if ( i < 256 + 0x54 ) {
@@ -201,7 +196,7 @@ void HariMain(void)
                     timer_init(timer3, &fifo, 0);
                     cursor_c = COL8_000000;
                 }
-                else{
+                else {
                     timer_init(timer3, &fifo, 1);
                     cursor_c = COL8_FFFFFF;
                 }
@@ -288,20 +283,17 @@ void make_textbox8(struct SHEET *sht, int x0, int y0, int sx, int sy, int c)
 void task_b_main(struct SHEET *sht_back)
 {
     struct FIFO32 fifo;
-    struct TIMER *timer_ts, *timer_put, *timer_ls;
+    struct TIMER *timer_put, *timer_1s;
     int i, fifobuf[128], count = 0, count0 = 0;
     char s[12];
 
     fifo32_init(&fifo, 128, fifobuf);
-    timer_ts = timer_alloc();
-    timer_init(timer_ts, &fifo, 2);
-    timer_settime(timer_ts, 2);
     timer_put = timer_alloc();
     timer_init(timer_put, &fifo, 1);
     timer_settime(timer_put, 1);
-    timer_ls = timer_alloc();
-    timer_init(timer_ls, &fifo, 100);
-    timer_settime(timer_ls, 100);
+    timer_1s = timer_alloc();
+    timer_init(timer_1s, &fifo, 100);
+    timer_settime(timer_1s, 100);
 
 
     for (;;) {
@@ -309,26 +301,23 @@ void task_b_main(struct SHEET *sht_back)
         /* if this line delite , dont move bug?*/
         sprintf(s, "%10d", count);
         putfonts8_asc_sht(sht_back, 100, 144, COL8_FFFFFF, COL8_008484, s, 10);
-        io_cli();
-        if(fifo32_status(&fifo) == 0){
-            io_sti();
+        io_cli(); /* disable interrupt */
+        if(fifo32_status(&fifo) == 0) {
+            io_sti(); /* enable interrupt */
         }
-        else{
+        else {
             i = fifo32_get(&fifo);
             io_sti();
             if (i == 1) {
                 sprintf(s, "%11d", count);
                 putfonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
                 timer_settime(timer_put, 1);
-            } else if ( i == 2) {
-                farjmp(0, 3 * 8);
-                timer_settime(timer_ts, 2);
             }
-            else if ( i == 100){
+            else if ( i == 100) {
                 sprintf(s, "%11d", count - count0);
                 putfonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
                 count0 = count;
-                timer_settime(timer_ls, 100);
+                timer_settime(timer_1s, 100);
             }
         }
     }
