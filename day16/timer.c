@@ -107,7 +107,7 @@ void inthandler20(int *esp)
         }
         /* time out */
         timer->flags = TIMER_FLAGS_ALLOC;
-        if (timer != mt_timer){
+        if (timer != task_timer){
         fifo32_put(timer->fifo, timer->data);
         } else {
             ts = 1; /* timeout mt_timer */
@@ -119,7 +119,7 @@ void inthandler20(int *esp)
     /* timerctl.next setting */
     timerctl.next_time = timerctl.t0->timeout;
     if (ts != 0) {
-        mt_taskswitch();
+        task_switch();
     }
     return;
 }

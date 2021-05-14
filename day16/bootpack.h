@@ -188,6 +188,30 @@ struct TIMERCTL {
 extern struct TIMERCTL timerctl;
 
 /*mtask.c*/
-extern struct TIMER *mt_timer;
-void mt_init(void);
-void mt_taskswitch(void);
+extern struct TIMER *task_timer;
+struct TASK *task_init(struct MEMMAN *memman);
+struct TASK *task_alloc(void);
+void task_run(struct TASK *task);
+void task_switch(void);
+
+#define MAX_TASKS 	1000 /*最大タスク数 */
+#define TASK_GDT0 	3 	 /* TSSをGDTの何番から割り当てるのか */
+struct TSS32 {
+	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
+	int eip, eflags, eax, ecx, dex, ebx,edx, esp, ebp, esi, edi;
+	int es, cs, ss, ds, fs, gs;
+	int ldtr, iomap;
+};
+
+struct TASK {
+	int sel, flags; /*selはGDTの番号のこと */
+	struct TSS32 tss;
+};
+
+struct TASKCTL {
+	int running; /* how many task doing */
+	int now; /* variables to know which task is currently running */
+	struct TASK *tasks[MAX_TASKS];
+	struct TASK tasks0[MAX_TASKS];
+};
+
