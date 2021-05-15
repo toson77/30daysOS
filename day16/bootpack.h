@@ -37,8 +37,9 @@ unsigned int memtest_sub(unsigned int start, unsigned int end);
 struct FIFO32{
 	int *buf;
 	int p, q, size, free, flags;
+	struct TASK *task;
 };
-void fifo32_init(struct FIFO32 *fifo, int size, int *buf);
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);
 int fifo32_put(struct FIFO32 *fifo, int  data);
 int fifo32_get(struct FIFO32 *fifo);
 int fifo32_status(struct FIFO32 *fifo);
@@ -193,12 +194,13 @@ struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
 void task_run(struct TASK *task);
 void task_switch(void);
+void task_sleep(struct TASK *task);
 
 #define MAX_TASKS 	1000 /*最大タスク数 */
 #define TASK_GDT0 	3 	 /* TSSをGDTの何番から割り当てるのか */
 struct TSS32 {
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
-	int eip, eflags, eax, ecx, dex, ebx,edx, esp, ebp, esi, edi;
+	int eip, eflags, eax, ecx, ebx,edx, esp, ebp, esi, edi;
 	int es, cs, ss, ds, fs, gs;
 	int ldtr, iomap;
 };
