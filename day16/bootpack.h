@@ -192,7 +192,7 @@ extern struct TIMERCTL timerctl;
 extern struct TIMER *task_timer;
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
-void task_run(struct TASK *task);
+void task_run(struct TASK *task, int priority);
 void task_switch(void);
 void task_sleep(struct TASK *task);
 
@@ -207,6 +207,7 @@ struct TSS32 {
 
 struct TASK {
 	int sel, flags; /*selはGDTの番号のこと */
+	int priority;
 	struct TSS32 tss;
 };
 
