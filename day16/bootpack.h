@@ -192,12 +192,14 @@ extern struct TIMERCTL timerctl;
 extern struct TIMER *task_timer;
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
-void task_run(struct TASK *task, int priority);
+void task_run(struct TASK *task,int level, int priority);
 void task_switch(void);
 void task_sleep(struct TASK *task);
 
-#define MAX_TASKS 	1000 /*最大タスク数 */
-#define TASK_GDT0 	3 	 /* TSSをGDTの何番から割り当てるのか */
+#define MAX_TASKS 		1000 /*最大タスク数 */
+#define TASK_GDT0 		3 	 /* TSSをGDTの何番から割り当てるのか */
+#define MAX_TASKS_LV 	100
+#define MAX_TASKLEVELS 	10
 struct TSS32 {
 	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
 	int eip, eflags, eax, ecx, ebx,edx, esp, ebp, esi, edi;
@@ -207,14 +209,20 @@ struct TSS32 {
 
 struct TASK {
 	int sel, flags; /*selはGDTの番号のこと */
-	int priority;
+	int level, priority;
 	struct TSS32 tss;
 };
 
+struct TASKLEVEL {
+	int running; /* number of running task  */
+	int now; /* now running */
+	struct TASK *tasks[MAX_TASKS_LV];
+};
+
 struct TASKCTL {
-	int running; /* how many task doing */
-	int now; /* variables to know which task is currently running */
-	struct TASK *tasks[MAX_TASKS];
+	int now_lv; /* currently operating level */
+	char lv_chage ; /* when chenge task next, chenge level*/
+	struct TASKLEVEL level[MAX_TASKLEVELS];
 	struct TASK tasks0[MAX_TASKS];
 };
 
